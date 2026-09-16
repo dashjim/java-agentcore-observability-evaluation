@@ -2,6 +2,8 @@
 
 这个示例让 Java 应用执行真实 Bedrock 工具调用，通过 ADOT Java Agent 直接把 GenAI spans 发送到 AWS，再由 AgentCore Online Evaluations 自动评分。Java 应用和所有运维脚本均包含中文注释。
 
+**完整客户说明与验证报告：**[AgentCore-Evaluation-Java接入与评分说明](docs/AgentCore-Evaluation-Java接入与评分说明.md)。本文集中说明 Java 接入、评分量表、EMF、Dashboard、实测结果与复现步骤。
+
 最终仓库脚本实测：两个 Java 会话自动产生 10 条 Online 数值评分、0 条评估错误；CloudWatch 汇总与原始评分一致。实验执行者保留了 AWS 资源和全部成功／失败记录。
 
 Java 应用负责调用顺序、工具执行和业务埋点；Bedrock 模型负责选择工具和生成回答；ADOT Java 负责使用默认 AWS 凭证链签名并导出；AgentCore Evaluations 负责读取会话、调用 judge 和写出评分；CloudWatch 负责存储与同指标统计。

@@ -1,5 +1,7 @@
 # Java 接入与评分说明
 
+本页提供快速接入说明。完整代码片段、格式反例、实测结果和复现顺序见 [AgentCore-Evaluation-Java接入与评分说明](AgentCore-Evaluation-Java接入与评分说明.md)。
+
 ## 客户现状与接入目标
 
 客户在 AgentCore Runtime 外运行 Java／Spring Agent。客户希望 AWS 接收其遥测，AgentCore Evaluations 评价回答与工具使用，CloudWatch 提供可检查的评分和趋势。客户不需要为了这条链路把业务 Agent 改写成 Python。
