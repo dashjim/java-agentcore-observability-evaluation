@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>example.agentcore</groupId>
+  <artifactId>java-evaluation-agent</artifactId>
+  <version>1.0.0</version>
+  <properties>
+    <!-- Maven 使用 Java 21 语法和目标字节码；源码使用 Java 21 集合 API，请使用 JDK 21 构建和运行。 -->
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Jackson 2.18.9 包含本次安全审查确认的修复；BOM 同时约束 databind、core 和 annotations 的版本。 -->
+    <jackson.version>2.18.9</jackson.version>
+    <!-- OTel 1.64.0 与启动器所用 ADOT 2.30.0 的 SDK 对齐，并包含 W3C baggage 内存分配漏洞修复。 -->
+    <opentelemetry.version>1.64.0</opentelemetry.version>
+    <!-- Maven 默认把产物留在本模块；调用方可用 -Dagent.build.directory 覆盖，无需依赖特定检出位置。 -->
+    <agent.build.directory>${project.basedir}/target</agent.build.directory>
+  </properties>
+  <dependencyManagement>
+    <dependencies>
+      <!-- Maven 按 Jackson 官方 BOM 统一应用 JSON 依赖，避免只升级 databind 而保留旧版 core。 -->
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <!-- Java 应用通过同步 Bedrock Runtime 客户端发起真实 Converse 请求，AWS SDK 管理凭证与请求签名。 -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId><artifactId>bedrockruntime</artifactId><version>2.54.19</version>
+      <exclusions>
+        <!-- 本示例只使用同步客户端；Maven 排除未使用的异步 Netty 实现，保留 SDK 默认同步 HTTP 客户端。 -->
+        <exclusion><groupId>software.amazon.awssdk</groupId><artifactId>netty-nio-client</artifactId></exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Java 应用仅依赖 OTel API；启动器挂载的 ADOT Java agent 提供 provider、SDK、遥测导出器和 SigV4。 -->
+    <!-- opentelemetry-api 同版本传递引入 context；应用仍不打包 OTel SDK 或导出器。 -->
+    <dependency><groupId>io.opentelemetry</groupId><artifactId>opentelemetry-api</artifactId><version>${opentelemetry.version}</version></dependency>
+    <!-- Java 工具层使用 Jackson 映射参数、工具结果与遥测 JSON，不启用多态反序列化。 -->
+    <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
+    <!-- SLF4J Simple 承接依赖库的应用日志；该依赖不负责 ADOT span 导出。 -->
+    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-simple</artifactId><version>1.7.36</version></dependency>
+    <!-- JUnit 仅用于本地工具/遥测契约测试，Maven 不将测试依赖打入可运行 JAR。 -->
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>5.12.2</version><scope>test</scope></dependency>
+  </dependencies>
+  <build>
+    <directory>${agent.build.directory}</directory>
+    <finalName>java-evaluation-agent</finalName>
+    <plugins>
+      <!-- Maven 编译主代码和测试代码，并按上面的 UTF-8 设置读取中文注释。 -->
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.0</version></plugin>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.5.3</version>
+        <!-- Surefire 在已创建的构建目录存放测试 JVM 临时文件；关闭 JVM 性能数据文件以避免写入系统临时目录。 -->
+        <configuration><argLine>-Djava.io.tmpdir="${project.build.directory}" -XX:-UsePerfData</argLine></configuration>
+      </plugin>
+      <!-- Maven Shade 将应用与运行依赖打入同一 JAR；ADOT Java agent 仍由启动器单独挂载。 -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId><artifactId>maven-shade-plugin</artifactId><version>3.6.0</version>
+        <executions><execution><phase>package</phase><goals><goal>shade</goal></goals><configuration>
+          <createDependencyReducedPom>false</createDependencyReducedPom>
+          <!-- Shade 重打包后原依赖签名已不适用；合并后的 JAR 使用 classpath，不保留各依赖的模块描述符。 -->
+          <filters><filter><artifact>*:*</artifact><excludes>
+            <exclude>META-INF/*.SF</exclude><exclude>META-INF/*.DSA</exclude><exclude>META-INF/*.RSA</exclude>
+            <exclude>module-info.class</exclude><exclude>META-INF/versions/*/module-info.class</exclude>
+          </excludes></filter></filters>
+          <transformers>
+            <!-- Shade 合并服务发现文件，保留 AWS SDK 等依赖的实现注册，并设置 Java 程序入口。 -->
+            <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+              <mainClass>example.agentcore.MinimalAgent</mainClass>
+            </transformer>
+          </transformers>
+        </configuration></execution></executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

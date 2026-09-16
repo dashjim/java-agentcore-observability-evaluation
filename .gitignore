@@ -1,0 +1,31 @@
+# 开发者只提交源代码、说明和经过脱敏的样例；本地运行状态与原始遥测留在本机。
+.local/
+tmp/
+work/
+recheck-*/
+**/target/
+**/m2/
+**/__pycache__/
+*.pyc
+.venv/
+venv/
+
+# AWS/GitHub 凭证、私钥、环境文件和实际账号状态不得提交。
+.env
+.env.*
+!.env.example
+.aws/
+*.pem
+*.key
+*aws-state*.json
+state.json
+*.log
+*.jsonl
+
+# 外部二进制与 IDE 产物不作为源码分发；启动脚本校验下载工件的摘要。
+*.jar
+*.tar.gz
+*.zip
+.DS_Store
+.idea/
+.vscode/

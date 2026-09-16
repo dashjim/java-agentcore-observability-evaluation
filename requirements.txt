@@ -1,0 +1,8 @@
+# 管理脚本依赖；boto3/botocore 固定为实测版本，其余依赖也固定以便复现。
+boto3==1.43.6
+botocore==1.43.6
+jmespath==1.0.1
+python-dateutil==2.9.0.post0
+s3transfer==0.17.0
+six==1.17.0
+urllib3==2.8.0

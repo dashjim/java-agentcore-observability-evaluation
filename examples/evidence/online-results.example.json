@@ -1,0 +1,632 @@
+[
+  {
+    "resource": {
+      "attributes": {
+        "aws.service.type": "gen_ai_agent",
+        "aws.local.service": "unknown",
+        "service.name": "example-java-agent"
+      }
+    },
+    "traceId": "11111111111111111111111111111111",
+    "timeUnixNano": 1789527780530871200,
+    "observedTimeUnixNano": 1789528437500585176,
+    "severityNumber": 9,
+    "name": "gen_ai.evaluation.result",
+    "attributes": {
+      "gen_ai.evaluation.name": "example_scale",
+      "session.id": "example-session-1",
+      "gen_ai.response.id": "11111111111111111111111111111111",
+      "gen_ai.evaluation.score.value": 5.0,
+      "gen_ai.evaluation.explanation": "The assistant accurately used the 'order_lookup' tool to retrieve the order status and the 'calculator' tool to compute the total price. The assistant's response correctly states the order status as 'SHIPPED' and the total price as '73.5 USD', which matches the tool evidence.",
+      "gen_ai.evaluation.score.label": "Correct",
+      "aws.bedrock_agentcore.online_evaluation_config.arn": "arn:aws:bedrock-agentcore:us-east-1:000000000000:online-evaluation-config/example_online-AbCdEf0123",
+      "aws.bedrock_agentcore.online_evaluation_config.name": "example_online",
+      "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:us-east-1:000000000000:evaluator/example_scale-AbCdEf0123",
+      "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+      "aws.bedrock_agentcore.evaluation_level": "Trace"
+    },
+    "onlineEvaluationConfigId": "example_online-AbCdEf0123",
+    "service.name": "example-java-agent",
+    "label": "Correct",
+    "_aws": {
+      "Timestamp": 1789527780530,
+      "CloudWatchMetrics": [
+        {
+          "Namespace": "Bedrock-AgentCore/Evaluations",
+          "Dimensions": [
+            [
+              "service.name"
+            ],
+            [
+              "label",
+              "service.name"
+            ],
+            [
+              "service.name",
+              "onlineEvaluationConfigId"
+            ],
+            [
+              "label",
+              "service.name",
+              "onlineEvaluationConfigId"
+            ]
+          ],
+          "Metrics": [
+            {
+              "Name": "example_scale",
+              "Unit": "None"
+            }
+          ]
+        }
+      ]
+    },
+    "example_scale": 5.0
+  },
+  {
+    "resource": {
+      "attributes": {
+        "aws.service.type": "gen_ai_agent",
+        "aws.local.service": "unknown",
+        "service.name": "example-java-agent"
+      }
+    },
+    "traceId": "11111111111111111111111111111111",
+    "timeUnixNano": 1789527780530871200,
+    "observedTimeUnixNano": 1789528437500780009,
+    "severityNumber": 9,
+    "name": "gen_ai.evaluation.result",
+    "attributes": {
+      "gen_ai.evaluation.name": "Builtin.Correctness",
+      "session.id": "example-session-1",
+      "gen_ai.response.id": "11111111111111111111111111111111",
+      "gen_ai.evaluation.score.value": 1.0,
+      "gen_ai.evaluation.explanation": "The tool outputs show: order ORD-1001 has status 'SHIPPED', unit_price 24.50 USD, quantity 3, and the calculator result is 73.5. The candidate response states the order status is SHIPPED and the total price is 73.5 USD, which matches the tool outputs exactly. The note about 'local demo data' is a minor additional detail that is accurate (source field says 'local_demo_fixture'). All factual claims are correct.",
+      "gen_ai.evaluation.score.label": "Perfectly Correct",
+      "aws.bedrock_agentcore.online_evaluation_config.arn": "arn:aws:bedrock-agentcore:us-east-1:000000000000:online-evaluation-config/example_online-AbCdEf0123",
+      "aws.bedrock_agentcore.online_evaluation_config.name": "example_online",
+      "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+      "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+      "aws.bedrock_agentcore.evaluation_level": "Trace"
+    },
+    "onlineEvaluationConfigId": "example_online-AbCdEf0123",
+    "service.name": "example-java-agent",
+    "label": "Perfectly Correct",
+    "_aws": {
+      "Timestamp": 1789527780530,
+      "CloudWatchMetrics": [
+        {
+          "Namespace": "Bedrock-AgentCore/Evaluations",
+          "Dimensions": [
+            [
+              "service.name"
+            ],
+            [
+              "label",
+              "service.name"
+            ],
+            [
+              "service.name",
+              "onlineEvaluationConfigId"
+            ],
+            [
+              "label",
+              "service.name",
+              "onlineEvaluationConfigId"
+            ]
+          ],
+          "Metrics": [
+            {
+              "Name": "Builtin.Correctness",
+              "Unit": "None"
+            }
+          ]
+        }
+      ]
+    },
+    "Builtin.Correctness": 1.0
+  },
+  {
+    "resource": {
+      "attributes": {
+        "aws.service.type": "gen_ai_agent",
+        "aws.local.service": "unknown",
+        "service.name": "example-java-agent"
+      }
+    },
+    "traceId": "11111111111111111111111111111111",
+    "timeUnixNano": 1789527780530871200,
+    "observedTimeUnixNano": 1789528437500799880,
+    "severityNumber": 9,
+    "name": "gen_ai.evaluation.result",
+    "attributes": {
+      "gen_ai.evaluation.name": "Builtin.Helpfulness",
+      "session.id": "example-session-1",
+      "gen_ai.response.id": "11111111111111111111111111111111",
+      "gen_ai.evaluation.score.value": 0.83,
+      "gen_ai.evaluation.explanation": "The user's goal was to: 1) Query order ORD-1001, 2) Use a calculator to compute unit price × quantity, and 3) Get the order status and total price in USD.\n\nThe assistant's response directly addresses all three goals:\n1. It correctly reports the order status as 'SHIPPED' (from the order_lookup tool result)\n2. It correctly reports the total price as 73.5 USD (from the calculator tool result: 24.5 × 3 = 73.5)\n3. It mentions the data source ('本地演示数据' / local demo data), which is transparent and informative\n\nThe response is concise, accurate based on the tool outputs, and directly answers what the user asked. It covers both pieces of information requested (status and total price) in a clear format. The note about local demo data is a minor addition that provides context without being distracting.\n\nThe response fully satisfies the user's request without unnecessary padding or missing information. It could potentially be slightly more detailed (e.g., showing the calculation breakdown: 24.5 × 3 = 73.5), but the core information is complete and accurate.",
+      "gen_ai.evaluation.score.label": "Very Helpful",
+      "aws.bedrock_agentcore.online_evaluation_config.arn": "arn:aws:bedrock-agentcore:us-east-1:000000000000:online-evaluation-config/example_online-AbCdEf0123",
+      "aws.bedrock_agentcore.online_evaluation_config.name": "example_online",
+      "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+      "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+      "aws.bedrock_agentcore.evaluation_level": "Trace"
+    },
+    "onlineEvaluationConfigId": "example_online-AbCdEf0123",
+    "service.name": "example-java-agent",
+    "label": "Very Helpful",
+    "_aws": {
+      "Timestamp": 1789527780530,
+      "CloudWatchMetrics": [
+        {
+          "Namespace": "Bedrock-AgentCore/Evaluations",
+          "Dimensions": [
+            [
+              "service.name"
+            ],
+            [
+              "label",
+              "service.name"
+            ],
+            [
+              "service.name",
+              "onlineEvaluationConfigId"
+            ],
+            [
+              "label",
+              "service.name",
+              "onlineEvaluationConfigId"
+            ]
+          ],
+          "Metrics": [
+            {
+              "Name": "Builtin.Helpfulness",
+              "Unit": "None"
+            }
+          ]
+        }
+      ]
+    },
+    "Builtin.Helpfulness": 0.83
+  },
+  {
+    "resource": {
+      "attributes": {
+        "aws.service.type": "gen_ai_agent",
+        "aws.local.service": "unknown",
+        "service.name": "example-java-agent"
+      }
+    },
+    "traceId": "11111111111111111111111111111111",
+    "spanId": "0000000000000004",
+    "timeUnixNano": 1789527780530871200,
+    "observedTimeUnixNano": 1789528437500818401,
+    "severityNumber": 9,
+    "name": "gen_ai.evaluation.result",
+    "attributes": {
+      "gen_ai.evaluation.name": "Builtin.ToolSelectionAccuracy",
+      "session.id": "example-session-1",
+      "gen_ai.evaluation.score.value": 1.0,
+      "gen_ai.evaluation.explanation": "The user explicitly requested two things: (1) look up order ORD-1001, and (2) use the calculator to compute unit price × quantity, then report the order status and total price in USD.\n\nThe first necessary step is to retrieve the order details for ORD-1001 using the order_lookup tool. Without this information, the agent cannot know the unit price, quantity, currency, or status needed to fulfill the user's request.\n\nThe action taken is exactly order_lookup with order_id='ORD-1001', which is precisely what is needed as the first step. The required parameter (order_id) is clearly provided by the user. The result successfully returns unit_price=24.50, quantity=3, currency=USD, and status=SHIPPED — all the data needed for the subsequent calculator call.\n\nThis action directly addresses the user's request, is aligned with their intent, has all necessary parameters, and is the logical first step a helpful assistant would take. The action is fully justified.",
+      "gen_ai.evaluation.score.label": "Yes",
+      "aws.bedrock_agentcore.online_evaluation_config.arn": "arn:aws:bedrock-agentcore:us-east-1:000000000000:online-evaluation-config/example_online-AbCdEf0123",
+      "aws.bedrock_agentcore.online_evaluation_config.name": "example_online",
+      "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.ToolSelectionAccuracy",
+      "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+      "aws.bedrock_agentcore.evaluation_level": "Span"
+    },
+    "onlineEvaluationConfigId": "example_online-AbCdEf0123",
+    "service.name": "example-java-agent",
+    "label": "Yes",
+    "_aws": {
+      "Timestamp": 1789527780530,
+      "CloudWatchMetrics": [
+        {
+          "Namespace": "Bedrock-AgentCore/Evaluations",
+          "Dimensions": [
+            [
+              "service.name"
+            ],
+            [
+              "label",
+              "service.name"
+            ],
+            [
+              "service.name",
+              "onlineEvaluationConfigId"
+            ],
+            [
+              "label",
+              "service.name",
+              "onlineEvaluationConfigId"
+            ]
+          ],
+          "Metrics": [
+            {
+              "Name": "Builtin.ToolSelectionAccuracy",
+              "Unit": "None"
+            }
+          ]
+        }
+      ]
+    },
+    "Builtin.ToolSelectionAccuracy": 1.0
+  },
+  {
+    "resource": {
+      "attributes": {
+        "aws.service.type": "gen_ai_agent",
+        "aws.local.service": "unknown",
+        "service.name": "example-java-agent"
+      }
+    },
+    "traceId": "11111111111111111111111111111111",
+    "spanId": "0000000000000002",
+    "timeUnixNano": 1789527780530871200,
+    "observedTimeUnixNano": 1789528437500834472,
+    "severityNumber": 9,
+    "name": "gen_ai.evaluation.result",
+    "attributes": {
+      "gen_ai.evaluation.name": "Builtin.ToolSelectionAccuracy",
+      "session.id": "example-session-1",
+      "gen_ai.evaluation.score.value": 1.0,
+      "gen_ai.evaluation.explanation": "The user explicitly requested two things: (1) look up order ORD-1001, and (2) use the calculator tool to compute unit price × quantity, then report the order status and total price in USD.\n\nThe order_lookup tool already returned: unit_price=24.50, quantity=3, currency=USD, status=SHIPPED.\n\nThe next logical step, as explicitly instructed by the user, is to use the calculator to multiply unit_price (24.5) by quantity (3). The target tool-call does exactly this: it calls the calculator with operation='multiply', a=24.5, b=3. All required parameters are present and correct. The result (73.5) will allow the assistant to answer the user's question about the total price.\n\nThis action directly follows the user's explicit instruction to use the calculator for this computation, uses the correct values from the previous tool result, and advances the conversation toward the final answer. It is clearly justified.",
+      "gen_ai.evaluation.score.label": "Yes",
+      "aws.bedrock_agentcore.online_evaluation_config.arn": "arn:aws:bedrock-agentcore:us-east-1:000000000000:online-evaluation-config/example_online-AbCdEf0123",
+      "aws.bedrock_agentcore.online_evaluation_config.name": "example_online",
+      "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.ToolSelectionAccuracy",
+      "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+      "aws.bedrock_agentcore.evaluation_level": "Span"
+    },
+    "onlineEvaluationConfigId": "example_online-AbCdEf0123",
+    "service.name": "example-java-agent",
+    "label": "Yes",
+    "_aws": {
+      "Timestamp": 1789527780530,
+      "CloudWatchMetrics": [
+        {
+          "Namespace": "Bedrock-AgentCore/Evaluations",
+          "Dimensions": [
+            [
+              "service.name"
+            ],
+            [
+              "label",
+              "service.name"
+            ],
+            [
+              "service.name",
+              "onlineEvaluationConfigId"
+            ],
+            [
+              "label",
+              "service.name",
+              "onlineEvaluationConfigId"
+            ]
+          ],
+          "Metrics": [
+            {
+              "Name": "Builtin.ToolSelectionAccuracy",
+              "Unit": "None"
+            }
+          ]
+        }
+      ]
+    },
+    "Builtin.ToolSelectionAccuracy": 1.0
+  },
+  {
+    "resource": {
+      "attributes": {
+        "aws.service.type": "gen_ai_agent",
+        "aws.local.service": "unknown",
+        "service.name": "example-java-agent"
+      }
+    },
+    "traceId": "22222222222222222222222222222222",
+    "timeUnixNano": 1789527790760460887,
+    "observedTimeUnixNano": 1789528437500848346,
+    "severityNumber": 9,
+    "name": "gen_ai.evaluation.result",
+    "attributes": {
+      "gen_ai.evaluation.name": "example_scale",
+      "session.id": "example-session-2",
+      "gen_ai.response.id": "22222222222222222222222222222222",
+      "gen_ai.evaluation.score.value": 5.0,
+      "gen_ai.evaluation.explanation": "The assistant accurately used the 'order_lookup' tool to retrieve the order status and relevant details. It then used the 'calculator' tool to compute the total price by multiplying the unit price by the quantity. The assistant's response correctly states the order status as 'SHIPPED' and the total price as 73.5 USD, which matches the tool evidence.",
+      "gen_ai.evaluation.score.label": "Correct",
+      "aws.bedrock_agentcore.online_evaluation_config.arn": "arn:aws:bedrock-agentcore:us-east-1:000000000000:online-evaluation-config/example_online-AbCdEf0123",
+      "aws.bedrock_agentcore.online_evaluation_config.name": "example_online",
+      "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:us-east-1:000000000000:evaluator/example_scale-AbCdEf0123",
+      "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+      "aws.bedrock_agentcore.evaluation_level": "Trace"
+    },
+    "onlineEvaluationConfigId": "example_online-AbCdEf0123",
+    "service.name": "example-java-agent",
+    "label": "Correct",
+    "_aws": {
+      "Timestamp": 1789527790760,
+      "CloudWatchMetrics": [
+        {
+          "Namespace": "Bedrock-AgentCore/Evaluations",
+          "Dimensions": [
+            [
+              "service.name"
+            ],
+            [
+              "label",
+              "service.name"
+            ],
+            [
+              "service.name",
+              "onlineEvaluationConfigId"
+            ],
+            [
+              "label",
+              "service.name",
+              "onlineEvaluationConfigId"
+            ]
+          ],
+          "Metrics": [
+            {
+              "Name": "example_scale",
+              "Unit": "None"
+            }
+          ]
+        }
+      ]
+    },
+    "example_scale": 5.0
+  },
+  {
+    "resource": {
+      "attributes": {
+        "aws.service.type": "gen_ai_agent",
+        "aws.local.service": "unknown",
+        "service.name": "example-java-agent"
+      }
+    },
+    "traceId": "22222222222222222222222222222222",
+    "timeUnixNano": 1789527790760460887,
+    "observedTimeUnixNano": 1789528437500862971,
+    "severityNumber": 9,
+    "name": "gen_ai.evaluation.result",
+    "attributes": {
+      "gen_ai.evaluation.name": "Builtin.Correctness",
+      "session.id": "example-session-2",
+      "gen_ai.response.id": "22222222222222222222222222222222",
+      "gen_ai.evaluation.score.value": 1.0,
+      "gen_ai.evaluation.explanation": "The tool outputs show: order status is SHIPPED, unit price is 24.50 USD, quantity is 3, and the calculator result is 73.5 (24.5 × 3). The candidate response states the order status is SHIPPED and the total price is 73.5 USD, which matches the tool outputs exactly. The mention of 'local demo data' is a minor additional note that is accurate (source field shows 'local_demo_fixture'). All factual claims are correct.",
+      "gen_ai.evaluation.score.label": "Perfectly Correct",
+      "aws.bedrock_agentcore.online_evaluation_config.arn": "arn:aws:bedrock-agentcore:us-east-1:000000000000:online-evaluation-config/example_online-AbCdEf0123",
+      "aws.bedrock_agentcore.online_evaluation_config.name": "example_online",
+      "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+      "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+      "aws.bedrock_agentcore.evaluation_level": "Trace"
+    },
+    "onlineEvaluationConfigId": "example_online-AbCdEf0123",
+    "service.name": "example-java-agent",
+    "label": "Perfectly Correct",
+    "_aws": {
+      "Timestamp": 1789527790760,
+      "CloudWatchMetrics": [
+        {
+          "Namespace": "Bedrock-AgentCore/Evaluations",
+          "Dimensions": [
+            [
+              "service.name"
+            ],
+            [
+              "label",
+              "service.name"
+            ],
+            [
+              "service.name",
+              "onlineEvaluationConfigId"
+            ],
+            [
+              "label",
+              "service.name",
+              "onlineEvaluationConfigId"
+            ]
+          ],
+          "Metrics": [
+            {
+              "Name": "Builtin.Correctness",
+              "Unit": "None"
+            }
+          ]
+        }
+      ]
+    },
+    "Builtin.Correctness": 1.0
+  },
+  {
+    "resource": {
+      "attributes": {
+        "aws.service.type": "gen_ai_agent",
+        "aws.local.service": "unknown",
+        "service.name": "example-java-agent"
+      }
+    },
+    "traceId": "22222222222222222222222222222222",
+    "timeUnixNano": 1789527790760460887,
+    "observedTimeUnixNano": 1789528437500874890,
+    "severityNumber": 9,
+    "name": "gen_ai.evaluation.result",
+    "attributes": {
+      "gen_ai.evaluation.name": "Builtin.Helpfulness",
+      "session.id": "example-session-2",
+      "gen_ai.response.id": "22222222222222222222222222222222",
+      "gen_ai.evaluation.score.value": 0.83,
+      "gen_ai.evaluation.explanation": "The user's goal was clear: query order ORD-1001, use a calculator to compute unit price × quantity, and report the order status and total price in USD.\n\nThe assistant's response directly addresses all three requirements:\n1. It states the order status: SHIPPED ✓\n2. It provides the total price: 73.5 USD (correctly derived from 24.50 × 3 = 73.5) ✓\n3. It used the calculator tool as requested ✓\n\nThe response is concise and accurate based on the tool outputs. It also adds a brief note that the data comes from local demo fixtures, which is transparent and informative.\n\nThe response fully satisfies the user's request with all the information they asked for. It could potentially be slightly more detailed (e.g., showing the calculation breakdown: 24.50 × 3 = 73.5), but the core information is complete and correct. This is a very helpful response that fully achieves the user's stated goals.",
+      "gen_ai.evaluation.score.label": "Very Helpful",
+      "aws.bedrock_agentcore.online_evaluation_config.arn": "arn:aws:bedrock-agentcore:us-east-1:000000000000:online-evaluation-config/example_online-AbCdEf0123",
+      "aws.bedrock_agentcore.online_evaluation_config.name": "example_online",
+      "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+      "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+      "aws.bedrock_agentcore.evaluation_level": "Trace"
+    },
+    "onlineEvaluationConfigId": "example_online-AbCdEf0123",
+    "service.name": "example-java-agent",
+    "label": "Very Helpful",
+    "_aws": {
+      "Timestamp": 1789527790760,
+      "CloudWatchMetrics": [
+        {
+          "Namespace": "Bedrock-AgentCore/Evaluations",
+          "Dimensions": [
+            [
+              "service.name"
+            ],
+            [
+              "label",
+              "service.name"
+            ],
+            [
+              "service.name",
+              "onlineEvaluationConfigId"
+            ],
+            [
+              "label",
+              "service.name",
+              "onlineEvaluationConfigId"
+            ]
+          ],
+          "Metrics": [
+            {
+              "Name": "Builtin.Helpfulness",
+              "Unit": "None"
+            }
+          ]
+        }
+      ]
+    },
+    "Builtin.Helpfulness": 0.83
+  },
+  {
+    "resource": {
+      "attributes": {
+        "aws.service.type": "gen_ai_agent",
+        "aws.local.service": "unknown",
+        "service.name": "example-java-agent"
+      }
+    },
+    "traceId": "22222222222222222222222222222222",
+    "spanId": "0000000000000003",
+    "timeUnixNano": 1789527790760460887,
+    "observedTimeUnixNano": 1789528437500888548,
+    "severityNumber": 9,
+    "name": "gen_ai.evaluation.result",
+    "attributes": {
+      "gen_ai.evaluation.name": "Builtin.ToolSelectionAccuracy",
+      "session.id": "example-session-2",
+      "gen_ai.evaluation.score.value": 1.0,
+      "gen_ai.evaluation.explanation": "The user explicitly requested two things: (1) look up order ORD-1001, and (2) use the calculator to compute unit price × quantity, then report the order status and total price in USD.\n\nThe first necessary step is to call `order_lookup` with `order_id: 'ORD-1001'` to retrieve the order details (unit_price, quantity, currency, status). Without this data, the calculator call cannot be made meaningfully.\n\nThe action taken is exactly `order_lookup` with `order_id: 'ORD-1001'`, which is precisely what the user asked for as the first step. The required parameter (`order_id`) is clearly provided by the user. The result returns all needed fields: status, unit_price, quantity, and currency.\n\nThis action directly addresses the user's request, is aligned with their intent, has all necessary parameters, and is the logical first step before proceeding to the calculator call. A helpful assistant would absolutely take this action first.",
+      "gen_ai.evaluation.score.label": "Yes",
+      "aws.bedrock_agentcore.online_evaluation_config.arn": "arn:aws:bedrock-agentcore:us-east-1:000000000000:online-evaluation-config/example_online-AbCdEf0123",
+      "aws.bedrock_agentcore.online_evaluation_config.name": "example_online",
+      "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.ToolSelectionAccuracy",
+      "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+      "aws.bedrock_agentcore.evaluation_level": "Span"
+    },
+    "onlineEvaluationConfigId": "example_online-AbCdEf0123",
+    "service.name": "example-java-agent",
+    "label": "Yes",
+    "_aws": {
+      "Timestamp": 1789527790760,
+      "CloudWatchMetrics": [
+        {
+          "Namespace": "Bedrock-AgentCore/Evaluations",
+          "Dimensions": [
+            [
+              "service.name"
+            ],
+            [
+              "label",
+              "service.name"
+            ],
+            [
+              "service.name",
+              "onlineEvaluationConfigId"
+            ],
+            [
+              "label",
+              "service.name",
+              "onlineEvaluationConfigId"
+            ]
+          ],
+          "Metrics": [
+            {
+              "Name": "Builtin.ToolSelectionAccuracy",
+              "Unit": "None"
+            }
+          ]
+        }
+      ]
+    },
+    "Builtin.ToolSelectionAccuracy": 1.0
+  },
+  {
+    "resource": {
+      "attributes": {
+        "aws.service.type": "gen_ai_agent",
+        "aws.local.service": "unknown",
+        "service.name": "example-java-agent"
+      }
+    },
+    "traceId": "22222222222222222222222222222222",
+    "spanId": "0000000000000001",
+    "timeUnixNano": 1789527790760460887,
+    "observedTimeUnixNano": 1789528437500900851,
+    "severityNumber": 9,
+    "name": "gen_ai.evaluation.result",
+    "attributes": {
+      "gen_ai.evaluation.name": "Builtin.ToolSelectionAccuracy",
+      "session.id": "example-session-2",
+      "gen_ai.evaluation.score.value": 1.0,
+      "gen_ai.evaluation.explanation": "The user explicitly requested: (1) look up order ORD-1001, (2) use the calculator to compute unit_price × quantity, and (3) report the order status and total price in USD.\n\nThe previous tool call (order_lookup) returned unit_price=24.50, quantity=3, currency=USD, status=SHIPPED. Now the agent is calling the calculator with operation='multiply', a=24.5, b=3, which is exactly what the user asked for — multiplying unit price by quantity to get the total price.\n\nAll required parameters are present and correct:\n- operation: 'multiply' ✓\n- a: 24.5 (unit_price from order lookup) ✓\n- b: 3 (quantity from order lookup) ✓\n\nThis action directly fulfills the user's explicit instruction to use the calculator for this arithmetic, and it advances the conversation toward the final answer. The result (73.5 USD) will allow the agent to answer both parts of the user's question.",
+      "gen_ai.evaluation.score.label": "Yes",
+      "aws.bedrock_agentcore.online_evaluation_config.arn": "arn:aws:bedrock-agentcore:us-east-1:000000000000:online-evaluation-config/example_online-AbCdEf0123",
+      "aws.bedrock_agentcore.online_evaluation_config.name": "example_online",
+      "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.ToolSelectionAccuracy",
+      "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+      "aws.bedrock_agentcore.evaluation_level": "Span"
+    },
+    "onlineEvaluationConfigId": "example_online-AbCdEf0123",
+    "service.name": "example-java-agent",
+    "label": "Yes",
+    "_aws": {
+      "Timestamp": 1789527790760,
+      "CloudWatchMetrics": [
+        {
+          "Namespace": "Bedrock-AgentCore/Evaluations",
+          "Dimensions": [
+            [
+              "service.name"
+            ],
+            [
+              "label",
+              "service.name"
+            ],
+            [
+              "service.name",
+              "onlineEvaluationConfigId"
+            ],
+            [
+              "label",
+              "service.name",
+              "onlineEvaluationConfigId"
+            ]
+          ],
+          "Metrics": [
+            {
+              "Name": "Builtin.ToolSelectionAccuracy",
+              "Unit": "None"
+            }
+          ]
+        }
+      ]
+    },
+    "Builtin.ToolSelectionAccuracy": 1.0
+  }
+]
