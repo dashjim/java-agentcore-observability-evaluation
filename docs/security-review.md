@@ -27,3 +27,10 @@
 Java 应用记录的示例只包含本地虚构订单。原始 telemetry 仍可能包含账号、主机、进程参数、模型输入输出；实验执行者不会把这些原始文件上传 GitHub。匿名样例的替换字段由 examples/evidence/README.md 说明。
 
 本次 AWS 来源日志和结果日志均为 Never expire，Online 配置保持启用。实验执行者保留成功和失败事件、自定义 evaluator、角色与策略，直到用户明确要求删除。Git 忽略规则只控制提交范围，不删除本地或云端证据。
+
+
+## Dashboard 扩展检查
+
+审查人员检查新增 Dashboard 脚本的账号核对、同名资源保护和历史窗口参数。脚本只读取已有配置并创建 CloudWatch Dashboard，不修改 IAM、AgentCore 配置或日志，不开启公开共享。8 项 Dashboard 测试通过，原有 14 项脚本测试仍通过；源码、JSON 示例和 Git 提交再次执行秘密检查。
+
+本次扩展没有新增依赖。开发者继续使用此前审查过的 47 个 Maven 坐标与 7 个固定 Python 运行依赖。实验执行者只把匿名指标图片和占位符 Dashboard 定义加入 Git；实际资源 JSON、账号信息与 API 回执保留在仓库外。

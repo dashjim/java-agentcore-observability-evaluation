@@ -11,7 +11,7 @@
 3. Java 应用通过 `GlobalOpenTelemetry` 记录 Agent、chat 和 execute_tool spans，复用 ADOT 的 provider。
 4. ADOT Java Agent 使用 AWS 默认凭证链向 `https://xray.<region>.amazonaws.com/v1/traces` 执行 SigV4 签名并导出。
 5. X-Ray 向指定 CloudWatch 日志组交付 spans；AgentCore Evaluations 发现完成的会话并读取内容。
-6. LLM judge 按 evaluator rubric 作出判断；AgentCore Evaluations 写出结果；CloudWatch 从 EMF 提取指标并计算同指标统计。
+6. LLM judge 按 evaluator rubric 作出判断；AgentCore Evaluations 写出带理由和 EMF 的评分日志；CloudWatch 从日志自动提取指标并计算同指标统计。
 
 ADOT Java Agent 是 JVM instrumentation 组件，不是业务 Agent。CloudWatch 官方文档说明 Java collector-less 功能要求 ADOT Java ≥2.11.2；本项目实际验证的是 2.30.0。AgentCore 文档明确 ADOT Collector 不受支持用于外部 Agent Observability，不能把通用 CloudWatch Collector 示例当作本链路的推荐配置。
 
@@ -44,9 +44,29 @@ Spring 团队可以把根 span 放在 Agent Service 的调用边界，把 chat�
 
 ## Online 结果与汇总由谁提供
 
-AgentCore 默认结果组为 `/aws/bedrock-agentcore/evaluations/results/<config-id>`，默认 metric namespace 为 `Bedrock-AgentCore/Evaluations`。本次 metric name 本身就是 evaluator name。CloudWatch 发布的维度组合包括 `service.name + onlineEvaluationConfigId`，也有带 `label` 的组合。
+AgentCore Evaluations 默认将评分日志写入 `/aws/bedrock-agentcore/evaluations/results/<config-id>`。AgentCore Evaluations 写出的数值评分日志自带 **EMF（Embedded Metric Format，嵌入式指标格式）**。客户可以把 EMF 理解为：**带有“哪个数值属于哪个监控指标”说明的 JSON 日志**。AgentCore Evaluations 在同一条日志中记录评分、理由和指标说明；CloudWatch 按照这些说明自动提取数值，形成 Metrics 中的监控指标。客户应用无需为了这条评分链路再上传一份指标。
 
-CloudWatch 的 `Average` 是同一 metric identity、时间窗口内的均值；`SampleCount` 是数值样本数；`Sum` 是该指标各次评分之和。它们不是跨 evaluator 的业务总分，也不自动等于按 session 去重的统计。
+以 Helpfulness 得到 `0.83` 为例，各组件依次完成以下动作：
+
+1. AgentCore Evaluations 调用 Helpfulness evaluator，LLM judge 按评价标准给出判断与理由，AgentCore Evaluations 写出数值为 `0.83` 的评分结果。
+2. AgentCore Evaluations 在 JSON 日志中同时记录评分理由、`"Builtin.Helpfulness": 0.83`，以及 `_aws.CloudWatchMetrics` 中的 EMF 指标说明。
+3. CloudWatch 读取 EMF，把 `0.83` 记入 `Bedrock-AgentCore/Evaluations` 下的 `Builtin.Helpfulness` 指标，并按日志声明的维度区分服务和评估配置。
+4. 分析人员在 CloudWatch Metrics 中选择同一指标、同一组维度和统计周期；CloudWatch 对多次评分计算 `Average`，并按时间展示趋势。例如两次评分均为 `0.83` 时，CloudWatch 返回 `Average=0.83`、`SampleCount=2`、`Sum=1.66`。
+
+客户查看指标时，应区分以下四项：
+
+| 概念 | 本例内容 | CloudWatch 如何使用，客户如何理解 |
+|---|---|---|
+| Namespace（命名空间） | `Bedrock-AgentCore/Evaluations` | CloudWatch 用它给指标分类；客户可以把它理解为分类目录。AgentCore Evaluations 默认在 EMF 中声明此目录，它本身不是评分项。 |
+| Metric name（指标名） | `Builtin.Helpfulness` | CloudWatch 用它识别具体评分项。本例中，AgentCore Evaluations 声明的指标名与 evaluator 名相同。 |
+| Dimensions（维度） | `service.name` + `onlineEvaluationConfigId` | CloudWatch 用这两个维度的名称和具体值，区分“哪个服务、哪份 Online 评估配置”的评分序列。分析人员必须同时选择对应服务名和配置 ID。 |
+| Value（数值） | `0.83` | CloudWatch 从日志中的 `Builtin.Helpfulness` 字段读取本次数值；分析人员不能把数值当作指标名或维度。 |
+
+AgentCore Evaluations 还会在 EMF 中声明其他维度组合，例如增加 `label` 的组合。CloudWatch 将不同维度组合分别作为指标序列；分析人员对账时应固定同一组维度名称和具体值，不能把这些序列相加，否则可能重复计入同一条评分。在同一账号和 Region 内，CloudWatch 以 namespace、metric name 和完整维度组合共同识别一条指标序列。
+
+分析人员查看 **CloudWatch Logs** 时，可以逐条读取 `gen_ai.evaluation.explanation` 中的评分理由，并根据 session／trace 标识检查低分或排查评估错误。分析人员查看 **CloudWatch Metrics** 时，可以观察同一指标的平均水平和随时间的变化；Metrics 中的数值曲线不包含逐条文字理由。
+
+CloudWatch 对同一指标序列在指定统计周期内计算 `Average`（均值）、`SampleCount`（数值样本数）和 `Sum`（该指标各次评分之和）。CloudWatch 不会自动按 session 去重，也不会自动把不同 evaluator 合成为业务总分。客户分析应用不能直接加总 Helpfulness 的 0–1 分值与 custom judge 的 1–5 分值；客户需要总分时，应按下一节定义统一规则。
 
 分析人员在结果日志组选择 Logs Insights QL，运行以下查询即可得到每 evaluator 的数值评分事件统计：
 
@@ -62,7 +82,11 @@ fields jsonParse(@message) as r
   by r.attributes.`gen_ai.evaluation.name` as evaluator
 ```
 
-分析人员应另行统计错误、N/A、没有数值的分类结果与覆盖率，不能一律当作零分。EMF 时间戳与日志写入时间可能不同，分析人员应选定相同统计口径再对账。1 分钟 session timeout 也不是 1 分钟内返回评分的 SLA；服务还需要异步发现、读取和执行 judge。
+分析人员应另行统计错误、N/A、没有数值的分类结果与覆盖率，不能一律当作零分。
+
+**分析人员对账时，还需要区分业务时间与评分日志写入时间。** 本次实测中，AgentCore Evaluations 将原 trace 的结束时间写入 EMF 的 `_aws.Timestamp`（Unix 毫秒）；CloudWatch 用这个时间把评分归入 Metrics 的统计周期。AgentCore Evaluations 在稍后完成评分并记录 `observedTimeUnixNano`（Unix 纳秒），CloudWatch 接收的 log event 时间也在稍后；本次这两个时间比原 trace 结束时间晚约 10 分钟。分析人员不能把 `_aws.Timestamp` 当作评分完成或日志写入时间，也不能把约 10 分钟理解为固定延迟或 SLA。
+
+CloudWatch Logs Insights 的界面时间范围按日志事件时间筛选，因此分析人员直接使用同一组起止时间查询 Logs 和 Metrics，可能得到不同数量。分析人员核对 Metrics 时，应先让日志查询范围覆盖稍后写入的评分，再按每条日志的 `_aws.Timestamp` 归入相同业务时间窗口，并固定 evaluator、维度和统计周期；分析人员核对评分处理延迟时，则应比较原 trace 结束时间与 observed／log event 时间。AgentCore Evaluations 还需要异步发现、读取会话和执行 judge，管理员配置的 1 分钟 session timeout 不代表服务会在 1 分钟内返回评分。
 
 ## 自定义量表和最终总分
 

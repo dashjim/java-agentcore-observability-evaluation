@@ -6,6 +6,18 @@
 
 Java 应用负责调用顺序、工具执行和业务埋点；Bedrock 模型负责选择工具和生成回答；ADOT Java 负责使用默认 AWS 凭证链签名并导出；AgentCore Evaluations 负责读取会话、调用 judge 和写出评分；CloudWatch 负责存储与同指标统计。
 
+AgentCore Evaluations 的数值评分日志自带 **EMF（Embedded Metric Format）**，即带有“哪个数值属于哪个监控指标”说明的 JSON 日志。AgentCore Evaluations 写入 Helpfulness 的 `0.83`、评分理由和 EMF 后，CloudWatch 自动把数值提取为 `Builtin.Helpfulness`，放入默认 namespace（分类目录）`Bedrock-AgentCore/Evaluations`，并计算多次评分的 `Average` 和趋势。分析人员用 Logs 查逐条理由和错误，用 Metrics 看均值与趋势。
+
+客户可在[客户说明](docs/customer-guide.md#online-结果与汇总由谁提供)中查看指标字段、时间口径和总分边界，并从 [CloudWatch Dashboard](docs/dashboard.md) 查看创建命令与统计口径。项目已包含 [Dashboard 创建脚本](scripts/dashboard.py)、[JSON 定义示例](examples/dashboard/dashboard.example.json)和[匿名指标预览](examples/dashboard/README.md)。
+
+## 指标可视化预览
+
+CloudWatch 根据本次真实评分生成以下匿名静态预览；AWS Dashboard 同时提供数字卡片、趋势和日志查询。内置指标和 custom 量表分别显示。
+
+![内置指标均值：0.83、1.0、1.0](examples/dashboard/builtin-averages.png)
+
+![自定义指标均值：5.0](examples/dashboard/custom-average.png)
+
 ## 这个示例回答什么问题
 
 | 问题 | 已验证的结论 |
@@ -24,9 +36,11 @@ Java 应用负责调用顺序、工具执行和业务埋点；Bedrock 模型负�
 agent/                  Java Agent、工具、业务埋点与单元测试
 scripts/                AWS 配置、Java 启动、证据采集与显式清理脚本
 docs/customer-guide.md  Java/Spring 接入与评分语义
+docs/dashboard.md       Dashboard 创建、可视化与统计口径
 docs/validation.md      实验方法、结果与适用边界
 docs/security-review.md 发布前安全检查与依赖修复
 examples/evidence/      用于说明格式的匿名评分事件
+examples/dashboard/     匿名 Dashboard JSON 与真实指标预览
 ```
 
 ## 快速开始

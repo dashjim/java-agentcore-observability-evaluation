@@ -49,3 +49,10 @@ AgentCore 锁定被 Online 配置引用的 evaluator 后，会拒绝直接更新
 实验执行者核实两会话各有 6 个手工业务 spans，内容完整，resource service type 为 gen_ai_agent。新配置使用资源级 CloudWatch 日志策略；实际 API 要求仅传 resourceArn，不能同时传 policyName。脚本已修复该问题，并通过同一 state 的实际 --resume 完成资源创建；14 项本地脚本测试包括该 API 参数回归。
 
 实验执行者未清理旧组的 13 条评分和 2 条错误，也未清理本组的 10 条评分。两个 Online 配置保持 ACTIVE／ENABLED，四个来源／结果日志组均为 Never expire，所有相关 evaluator、角色和策略保留至用户明确要求删除。账户内的资源标识、Console 链接与原始证据清单由单独检查指南提供。
+
+
+## Dashboard 扩展验证
+
+实验执行者为上述最终配置创建 CloudWatch Dashboard，固定 06:35–06:55 UTC 历史窗口。CloudWatch 接收 11 个组件并返回 0 条验证消息；实验执行者通过 GetDashboard 核对保存内容，通过两张日志表确认 4 项指标汇总与 10 条评分明细，并检查 CloudWatch 渲染的指标图。创建脚本再次运行时返回 unchanged，没有改写已有页面。
+
+8 项新增 Dashboard 测试和原有 14 项脚本测试通过。开发者核实 Helpfulness 的提示词档位 0–6 不影响实际 0.83 分的展示。完整配置与验证范围见 [Dashboard 说明](dashboard.md)。

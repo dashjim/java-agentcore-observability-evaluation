@@ -1,0 +1,387 @@
+{
+  "start": "2026-09-16T06:35:00Z",
+  "periodOverride": "inherit",
+  "end": "2026-09-16T06:55:00Z",
+  "widgets": [
+    {
+      "type": "text",
+      "x": 0,
+      "y": 0,
+      "width": 24,
+      "height": 6,
+      "properties": {
+        "markdown": "## AgentCore Evaluations 评分观测\n应用选择服务 `example-java-agent`、配置 `example_config-0000000000`。CloudWatch Dashboard 名称在整个账号内共享；各图表读取指定 Region 的数据。\n\nAgentCore Evaluations 调用 evaluator 并写入评分/错误日志；CloudWatch 从 EMF（Embedded Metric Format，嵌入式指标格式）日志提取数值指标。各 evaluator 衡量不同方面，评分层级可能是 TRACE 或 SPAN；这些指标不是总分。应用根据本项目实测结果为这三项内置指标显示 0–1 范围，不使用内置提示词 ratingScale 换算运行分数或标签；应用只从自定义 ratingScale 读取 1–5 范围。\n\nCloudWatch 顶部卡片显示整个所选时段的 Average（该指标 Sum / SampleCount），不是最后五分钟的值，也不是各时间桶均值的再平均。趋势图按 300 秒分桶；SampleCount 是每项指标的评分样本数，不是会话数；Sum 只在同一指标内累加。应用不跨指标加总，不将缺失评分填成 0；CloudWatch 保留空白和断点。\n\nCloudWatch 指标按 EMF `_aws.Timestamp` 归属时间，Logs Insights 按日志 `@timestamp`筛选；AgentCore 的处理延迟可能使两者条数不同。默认窗口为最近三小时；本页面可固定历史时间范围；查看其他时间时使用控制台右上角时间选择器。CloudWatch 的数据可见范围受 AWS 数据保留期限制。"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 6,
+      "width": 6,
+      "height": 4,
+      "properties": {
+        "title": "CloudWatch 全时段均值 · Builtin.Helpfulness（0–1）",
+        "metrics": [
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "Builtin.Helpfulness",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "Average",
+              "label": "Builtin.Helpfulness"
+            }
+          ]
+        ],
+        "view": "singleValue",
+        "stat": "Average",
+        "period": 300,
+        "setPeriodToTimeRange": true,
+        "sparkline": false,
+        "region": "us-east-1"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 6,
+      "y": 6,
+      "width": 6,
+      "height": 4,
+      "properties": {
+        "title": "CloudWatch 全时段均值 · Builtin.Correctness（0–1）",
+        "metrics": [
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "Builtin.Correctness",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "Average",
+              "label": "Builtin.Correctness"
+            }
+          ]
+        ],
+        "view": "singleValue",
+        "stat": "Average",
+        "period": 300,
+        "setPeriodToTimeRange": true,
+        "sparkline": false,
+        "region": "us-east-1"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 6,
+      "width": 6,
+      "height": 4,
+      "properties": {
+        "title": "CloudWatch 全时段均值 · Builtin.ToolSelectionAccuracy（0–1）",
+        "metrics": [
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "Builtin.ToolSelectionAccuracy",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "Average",
+              "label": "Builtin.ToolSelectionAccuracy"
+            }
+          ]
+        ],
+        "view": "singleValue",
+        "stat": "Average",
+        "period": 300,
+        "setPeriodToTimeRange": true,
+        "sparkline": false,
+        "region": "us-east-1"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 18,
+      "y": 6,
+      "width": 6,
+      "height": 4,
+      "properties": {
+        "title": "CloudWatch 全时段均值 · example_quality（1–5）",
+        "metrics": [
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "example_quality",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "Average",
+              "label": "example_quality"
+            }
+          ]
+        ],
+        "view": "singleValue",
+        "stat": "Average",
+        "period": 300,
+        "setPeriodToTimeRange": true,
+        "sparkline": false,
+        "region": "us-east-1"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 10,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "title": "CloudWatch 内置评分趋势（0–1）",
+        "metrics": [
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "Builtin.Helpfulness",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "Average",
+              "label": "Builtin.Helpfulness"
+            }
+          ],
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "Builtin.Correctness",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "Average",
+              "label": "Builtin.Correctness"
+            }
+          ],
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "Builtin.ToolSelectionAccuracy",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "Average",
+              "label": "Builtin.ToolSelectionAccuracy"
+            }
+          ]
+        ],
+        "view": "timeSeries",
+        "stat": "Average",
+        "period": 300,
+        "stacked": false,
+        "yAxis": {
+          "left": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        "region": "us-east-1"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 10,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "title": "CloudWatch 自定义评分趋势（1–5）",
+        "metrics": [
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "example_quality",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "Average",
+              "label": "example_quality"
+            }
+          ]
+        ],
+        "view": "timeSeries",
+        "stat": "Average",
+        "period": 300,
+        "stacked": false,
+        "yAxis": {
+          "left": {
+            "min": 1,
+            "max": 5
+          }
+        },
+        "region": "us-east-1"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 16,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "title": "CloudWatch 各指标评分样本数（每 300 秒）",
+        "metrics": [
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "Builtin.Helpfulness",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "SampleCount",
+              "label": "Builtin.Helpfulness"
+            }
+          ],
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "Builtin.Correctness",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "SampleCount",
+              "label": "Builtin.Correctness"
+            }
+          ],
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "Builtin.ToolSelectionAccuracy",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "SampleCount",
+              "label": "Builtin.ToolSelectionAccuracy"
+            }
+          ],
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "example_quality",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "SampleCount",
+              "label": "example_quality"
+            }
+          ]
+        ],
+        "view": "timeSeries",
+        "stat": "SampleCount",
+        "period": 300,
+        "stacked": false,
+        "region": "us-east-1"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 16,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "title": "CloudWatch 各指标分值之和（每 300 秒，逐项展示）",
+        "metrics": [
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "Builtin.Helpfulness",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "Sum",
+              "label": "Builtin.Helpfulness"
+            }
+          ],
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "Builtin.Correctness",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "Sum",
+              "label": "Builtin.Correctness"
+            }
+          ],
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "Builtin.ToolSelectionAccuracy",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "Sum",
+              "label": "Builtin.ToolSelectionAccuracy"
+            }
+          ],
+          [
+            "Bedrock-AgentCore/Evaluations",
+            "example_quality",
+            "service.name",
+            "example-java-agent",
+            "onlineEvaluationConfigId",
+            "example_config-0000000000",
+            {
+              "stat": "Sum",
+              "label": "example_quality"
+            }
+          ]
+        ],
+        "view": "timeSeries",
+        "stat": "Sum",
+        "period": 300,
+        "stacked": false,
+        "region": "us-east-1"
+      }
+    },
+    {
+      "type": "log",
+      "x": 0,
+      "y": 22,
+      "width": 24,
+      "height": 6,
+      "properties": {
+        "title": "CloudWatch 日志统计 · 各 evaluator 评分条数 / 均值 / 错误数",
+        "query": "SOURCE '/aws/bedrock-agentcore/evaluations/results/example_config-0000000000'\n| fields jsonParse(@message) as r\n| filter r.name = \"gen_ai.evaluation.result\"\n| filter coalesce(r.`service.name`, r.resource.attributes.`service.name`) = \"example-java-agent\"\n| filter (r.onlineEvaluationConfigId = \"example_config-0000000000\" or r.attributes.`aws.bedrock_agentcore.online_evaluation_config.arn` = \"arn:aws:bedrock-agentcore:us-east-1:000000000000:online-evaluation-config/example_config-0000000000\")\n| fields r.attributes.`gen_ai.evaluation.name` as evaluator, r.attributes.`gen_ai.evaluation.score.value` as score, coalesce(r.attributes.error, 0) as evaluation_error\n| stats count(*) as result_events, count(score) as score_samples, avg(score) as average_score, sum(evaluation_error) as evaluation_errors by evaluator",
+        "view": "table",
+        "region": "us-east-1"
+      }
+    },
+    {
+      "type": "log",
+      "x": 0,
+      "y": 28,
+      "width": 24,
+      "height": 8,
+      "properties": {
+        "title": "CloudWatch 最近评分与错误 · 会话 / Trace / evaluator / 分值 / 解释",
+        "query": "SOURCE '/aws/bedrock-agentcore/evaluations/results/example_config-0000000000'\n| fields jsonParse(@message) as r\n| filter r.name = \"gen_ai.evaluation.result\"\n| filter coalesce(r.`service.name`, r.resource.attributes.`service.name`) = \"example-java-agent\"\n| filter (r.onlineEvaluationConfigId = \"example_config-0000000000\" or r.attributes.`aws.bedrock_agentcore.online_evaluation_config.arn` = \"arn:aws:bedrock-agentcore:us-east-1:000000000000:online-evaluation-config/example_config-0000000000\")\n| fields @timestamp, r.attributes.`session.id` as session, r.traceId as trace, r.attributes.`gen_ai.evaluation.name` as evaluator, r.attributes.`gen_ai.evaluation.score.value` as value, r.attributes.`gen_ai.evaluation.explanation` as explanation, r.attributes.error as evaluation_error, r.attributes.`error.type` as error_type, r.attributes.`error.message` as error_message\n| sort @timestamp desc\n| limit 30",
+        "view": "table",
+        "region": "us-east-1"
+      }
+    }
+  ]
+}
