@@ -73,7 +73,7 @@ export EVIDENCE_KEY="$(python3 -c 'import uuid; print(uuid.uuid4().hex)')"
 
 分析人员打开已创建的 [CloudWatch Runtime Dashboard](https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#dashboards:name=java-agentcore-runtime-evaluation-20261012)。原演示时间窗口为 `2026-10-12 05:50–06:20 UTC`（北京时间 `13:50–14:20`）；分析人员查看较晚的新调用时，应在控制台调整时间范围。
 
-CloudWatch 展示日志和同一 evaluator 的指标汇总；AgentCore Evaluations 负责产生数值评分及理由。分析人员先用 Session ID / Trace ID 对照业务 span，再核对 `onlineScoreRows` 和 `evaluationErrors`。Online 评分尚未出现时，分析人员保留当前采集结果并稍后复查，不能把响应成功等同于评分成功。本文编写时，Supervisor 尚在完成本次 Online 评分的最终核验。
+CloudWatch 展示日志和同一 evaluator 的指标汇总；AgentCore Evaluations 负责产生数值评分及理由。分析人员先用 Session ID / Trace ID 对照业务 span，再核对 `onlineScoreRows` 和 `evaluationErrors`。Online 评分尚未出现时，分析人员保留当前采集结果并稍后复查，不能把响应成功等同于评分成功。Supervisor 已核验本次两个 Runtime 会话共 9 条数值评分、1 条评估错误，详见 [Runtime 验证报告](e2e-test-report-runtime.md)。
 
 分析人员如需创建新的独立 Dashboard，可使用以下命令；脚本通过新的名称与文件路径保留原 Dashboard 和证据。
 

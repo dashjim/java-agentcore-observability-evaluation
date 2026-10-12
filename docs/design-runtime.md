@@ -39,4 +39,4 @@ Java 业务类 MinimalAgent 通过 AgentTelemetry 的 agent/chat/tool 三个入�
 
 ## 实测补充
 
-部署执行者将在部署完成后记录实际差异与排错结果。
+部署执行者创建 Runtime 后补充 cloud.resource_id 为真实 DEFAULT Endpoint ARN，并核对 Runtime 与 Endpoint 同为版本 3。Java 应用封装后两次调用均成功；ADOT 导出两会话各 6 个业务 spans；AgentCore Evaluations 写出 9 条评分、1 条错误。构建器显式使用 --provenance=false 生成单一 ARM64 manifest。部署执行者使用隔离 Docker 配置解决 ECR Public 拉取 403。依赖审查人员升级 Jackson、OTel 与官方 ADOT，并单独披露 ADOT 的残留安全公告。

@@ -1,5 +1,7 @@
 # Java ADOT 与 AgentCore Evaluation 实测
 
+维护者将本页保留为 2026-09 EC2 历史实验。验证人员对 2026-10-12 Runtime 版本的测试、调用和评分另记在 [Runtime 验证报告](e2e-test-report-runtime.md)。
+
 实验日期：2026-09-16，AWS Region 为 us-east-1。实验执行者在 EC2 主机上启动 Java 应用；被测系统是 Java 业务埋点、ADOT Java 直接导出、X-Ray／CloudWatch 接收和 AgentCore Evaluations 自动评分组成的链路。
 
 ## 实验目标与方法

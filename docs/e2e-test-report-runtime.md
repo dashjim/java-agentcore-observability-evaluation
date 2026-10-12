@@ -1,13 +1,36 @@
-# Java Runtime 与遥测封装验证报告
+# Java Runtime 端到端验证报告
 
-记录日期：2026-10-12 UTC。部署执行者已在 us-east-1 将 Java 应用部署到 AgentCore Runtime；最新 Runtime 和 DEFAULT Endpoint 均为 READY、版本 3。
+日期：2026-10-12。测试执行者验证自定义 Java ARM64 容器在 AgentCore Runtime 的 HTTP 协议、真实模型工具流程、ADOT 遥测和 Online Evaluations。
 
-Java 业务类通过 AgentTelemetry 的 agent/chat/tool 三个入口记录遥测。测试执行者确认 14 项 Java 测试、9 项 Runtime 部署脚本测试通过；既有 Python 管理脚本 22 项测试通过。测试执行者确认生产 JAR 不包含 test-only OTel SDK，原 CLI schema 与遥测字段契约保持一致。
+| 验证动作及责任主体 | 结果 |
+|---|---|
+| Java 测试执行者验证工具、HTTP 与遥测封装契约 | 14 项通过，0 失败/错误 |
+| Python 测试执行者验证部署恢复、权限范围及凭证处理 | 9 项通过 |
+| Python 测试执行者回归原管理脚本 | 22 项通过 |
+| Supervisor 调用实际 ARM64 容器 /ping | HTTP 200，Healthy |
+| Supervisor 发送缺少 Session 的本地调用 | HTTP 400 |
+| Supervisor 核对 Runtime 和 DEFAULT Endpoint | READY，二者同为版本 3 |
+| AWS 认证服务拒绝 Supervisor 的未签名调用 | HTTP 403 |
+| Java 应用执行两次真实订单任务 | 每次 3 次 Converse、order_lookup 与 calculator，返回 SHIPPED 与 73.5 USD |
+| ADOT 导出，Supervisor 对照 CloudWatch | 两会话各 6 个业务 spans，Session/Trace/Runtime 关联一致 |
+| AgentCore Evaluations 读取会话并评分 | 9 条数值评分、1 条评估错误 |
+| Supervisor 扫描最终源码秘密 | Gitleaks 0 项泄露 |
 
-Supervisor 核实新版 Java 应用的两个真实 Session 均成功执行 order_lookup 与 calculator，每个会话调用 Bedrock 3 次，返回订单 ORD-1001、SHIPPED、73.5 USD。ADOT 在每个会话导出 6 个业务 spans，验证执行者逐条核对 Session、Trace 和 Runtime Endpoint 关联。AWS 拒绝未签名调用，HTTP 状态为 403。
+本次是 SDK/CLI 部署，测试执行者使用真实 SigV4 调用验证入口。部署执行者未创建 WebUI。测试执行者没有删除云端实验资源。
 
-初版 r01 的 AgentCore Online Evaluations 已产生 9 条数值评分和 1 条自定义裁判解析错误，错误为 No score found in evaluation result；验证执行者将日志与 CloudWatch 指标逐项对账，计数一致。该错误记录保留。新版 r02 的 Online 评分仍在服务异步处理中，尚不能表述为全部评分通过。
+| Evaluator | 结果日志均值 | 数值评分数 |
+|---|---:|---:|
+| `Builtin.Correctness` | 1 | 2 |
+| `Builtin.Helpfulness` | 0.83 | 2 |
+| `Builtin.ToolSelectionAccuracy` | 1 | 4 |
+| `java_runtime_eval_20261012_scale` | 5 | 1 |
 
-审查人员对原47项 Maven 坐标修复后检查、2项新增测试依赖检查和7项固定Python依赖检查均未匹配已知公告。官方ADOT2.31.0仍含4项HIGH公告，ECR基础镜像扫描另有MEDIUM与UNDEFINED发现，详细边界见[安全审查](security-review-runtime.md)。
+Evaluations 对 `java_runtime_eval_20261012_scale` 记录 1 条 `ValueError`：`No score found in evaluation result`。
 
-部署执行者保留AWS资源和所有成功/失败记录；原始账号状态、会话与遥测只在本地交付中保存，公开源码只记录匿名结论。
+初版 r01 的验证执行者另记录了 9 条数值评分和 1 条自定义裁判解析错误；该错误与新版本结果分别保留。该自定义裁判使用 LLM，输出解析存在波动，消费评分的应用必须统计错误和覆盖率，不能把缺失分数当作零分。
+
+审查人员将应用 Jackson 更新到 2.18.11、OTel API 更新到 1.65.0，并使用官方 ADOT 2.31.0。官方 ADOT 内嵌 Jackson 仍有 4 项 HIGH 公告；当前静态检查未发现本示例的触发路径，这不是无漏洞证明。运维人员应持续跟踪厂商修复。
+
+部署执行者首次使用全局 Docker 配置读取 ECR Public 基底时遇到 403；部署执行者改用工作区内隔离的 Docker 配置后成功。构建器显式禁用 provenance 附加 manifest，输出单一 ARM64 镜像。部署脚本在 Runtime 创建后补充真实 endpoint ARN，并核对 DEFAULT Endpoint 与当前版本同步。
+
+本地完整资源与原始证据位于 `/home/ubuntu/g-repo/codex-doc/java-agentcore-runtime-20261012/检查指南.md`；公开源码文档只记录匿名结论。

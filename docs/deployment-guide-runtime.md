@@ -133,7 +133,7 @@ AgentCore Evaluations 异步处理会话。分析人员应分别核对 `summary.
 
 ## 验证人员记录当前结果，操作者保留资源
 
-截至本文更新，验证人员已确认 `us-east-1` Runtime 与 DEFAULT 为 READY；两个真实会话均成功执行两个工具并返回 `SHIPPED` 和 `73.5 USD`，Java 应用各调用模型 3 次，ADOT 向 CloudWatch 导出的每会话 6 个业务 span 与请求会话对应。验证人员已执行 14 项 Java 测试和 9 项 Runtime 部署脚本测试且全部通过。AgentCore Online Evaluations 的本次最终数值评分由 Supervisor 在最终验收时另行核验与更新。
+截至本文更新，验证人员已确认 `us-east-1` Runtime 与 DEFAULT 为 READY；两个真实会话均成功执行两个工具并返回 `SHIPPED` 和 `73.5 USD`，Java 应用各调用模型 3 次，ADOT 向 CloudWatch 导出的每会话 6 个业务 span 与请求会话对应。验证人员已执行 14 项 Java 测试和 9 项 Runtime 部署脚本测试且全部通过。Supervisor 已核验 AgentCore Online Evaluations 对本次两个会话写出 9 条数值评分、1 条评估错误，详见 [Runtime 验证报告](e2e-test-report-runtime.md)。
 
 部署与调用脚本都保留 `retain_until_user_requests_deletion=true`。部署执行者保留原 EC2 资源和本次 Runtime、ECR、角色、评估配置、Dashboard、日志及本地证据，不运行自动 cleanup。只有用户随后明确要求删除，管理员才可调整保留策略并执行与本次资源对应的删除流程；既有 EC2 清理脚本不能代替 Runtime 资源清理。
 

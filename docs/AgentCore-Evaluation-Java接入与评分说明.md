@@ -2,7 +2,7 @@
 
 客户技术说明与验证报告 · 更新日期：2026-09-16 · 验证 Region：us-east-1
 
-> 维护者将本文件作为完整客户说明与验证报告，补入原技术说明的最新修订。本文包含 Java 接入细节、评分解释、实测结果和复现步骤；当前仓库脚本及保留状态以本版为准。公开文档省略真实账号、会话、Trace 和资源 ID，实验执行者通过单独检查指南提供账户内访问入口。
+> 维护者保留本文的 2026-09 EC2 技术说明和实验结果。2026-10-12 之后，开发者应以 [Trace 封装与环境变量说明](telemetry-configuration.md)和 [Runtime 部署指南](deployment-guide-runtime.md)了解当前代码及依赖版本，以 [Runtime 验证报告](e2e-test-report-runtime.md)了解新增部署的结果。公开文档省略真实账号、会话、Trace 和资源 ID，实验执行者通过单独检查指南提供账户内访问入口。
 
 相关入口：[快速接入说明](customer-guide.md)、[Dashboard 与可视化](dashboard.md)、[验证记录](validation.md)、[安全检查](security-review.md)。
 

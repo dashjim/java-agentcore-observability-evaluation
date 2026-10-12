@@ -1,5 +1,7 @@
 # Java 接入与评分说明
 
+维护者保留本页的 2026-09 EC2 接入说明。开发者应从 [当前 Trace 封装与环境变量说明](telemetry-configuration.md)查看 OTel API、ADOT 和配置的最新关系；操作者应从 [Runtime 部署指南](deployment-guide-runtime.md)查看 2026-10-12 新增的托管部署与依赖版本。
+
 本页提供快速接入说明。完整代码片段、格式反例、实测结果和复现顺序见 [AgentCore-Evaluation-Java接入与评分说明](AgentCore-Evaluation-Java接入与评分说明.md)。
 
 ## 客户现状与接入目标

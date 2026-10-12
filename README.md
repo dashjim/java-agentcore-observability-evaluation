@@ -1,6 +1,6 @@
 # Java Agent 接入 AgentCore Observability 与 Evaluations
 
-**2026-10-12 新增 AgentCore Runtime 部署：**部署执行者已在 `us-east-1` 将同一 Java 业务部署为 ARM64 容器；AgentCore Runtime 与 DEFAULT Endpoint 均为 READY，两个真实会话均返回订单 `ORD-1001`、状态 `SHIPPED`、总价 `73.5 USD`。Java 应用在每个会话执行了 `order_lookup` 与 `calculator`，ADOT 向 CloudWatch 导出的每会话 6 个业务 span 与调用会话一致。AgentCore Online Evaluations 的本次评分仍待最终核验；以下原有 2026-09 实验结果不代表此次 Runtime 评分。
+**2026-10-12 新增 AgentCore Runtime 部署：**部署执行者已在 `us-east-1` 将同一 Java 业务部署为 ARM64 容器；AgentCore Runtime 与 DEFAULT Endpoint 均为 READY，两个真实会话均返回订单 `ORD-1001`、状态 `SHIPPED`、总价 `73.5 USD`。Java 应用在每个会话执行了 `order_lookup` 与 `calculator`，ADOT 向 CloudWatch 导出的每会话 6 个业务 span 与调用会话一致。AgentCore Online Evaluations 已为本次 Runtime 两会话写出 9 条数值评分、1 条评估错误，详见 [Runtime 验证报告](docs/e2e-test-report-runtime.md)。以下原有 2026-09 实验结果保留为 EC2 历史记录。
 
 开发者从 [Trace 封装与环境变量说明](docs/telemetry-configuration.md)了解 `AgentTelemetry`、OTel API 与外置 ADOT 的关系。
 
