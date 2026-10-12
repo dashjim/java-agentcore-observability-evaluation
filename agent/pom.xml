@@ -10,10 +10,10 @@
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!-- Jackson 2.18.9 包含本次安全审查确认的修复；BOM 同时约束 databind、core 和 annotations 的版本。 -->
-    <jackson.version>2.18.9</jackson.version>
-    <!-- OTel 1.64.0 与启动器所用 ADOT 2.30.0 的 SDK 对齐，并包含 W3C baggage 内存分配漏洞修复。 -->
-    <opentelemetry.version>1.64.0</opentelemetry.version>
+    <!-- 审查人员将 Jackson 升至 2.18.11，修复 2026-09/10 新公告；BOM 同时约束 databind、core 和 annotations。 -->
+    <jackson.version>2.18.11</jackson.version>
+    <!-- Maven 将 OTel API 1.65.0 与启动器所用 ADOT 2.31.0 的 SDK 对齐，避免应用与代理使用不同 API。 -->
+    <opentelemetry.version>1.65.0</opentelemetry.version>
     <!-- Maven 默认把产物留在本模块；调用方可用 -Dagent.build.directory 覆盖，无需依赖特定检出位置。 -->
     <agent.build.directory>${project.basedir}/target</agent.build.directory>
   </properties>
@@ -47,6 +47,8 @@
     <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-simple</artifactId><version>1.7.36</version></dependency>
     <!-- JUnit 仅用于本地工具/遥测契约测试，Maven 不将测试依赖打入可运行 JAR。 -->
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>5.12.2</version><scope>test</scope></dependency>
+    <!-- 契约测试使用内存 SpanExporter 校验真实 SDK 产生的 span；test scope 保证 SDK 不进入生产 JAR。 -->
+    <dependency><groupId>io.opentelemetry</groupId><artifactId>opentelemetry-sdk-trace</artifactId><version>${opentelemetry.version}</version><scope>test</scope></dependency>
   </dependencies>
   <build>
     <directory>${agent.build.directory}</directory>

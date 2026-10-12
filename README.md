@@ -1,10 +1,16 @@
 # Java Agent 接入 AgentCore Observability 与 Evaluations
 
+**2026-10-12 新增 AgentCore Runtime 部署：**部署执行者已在 `us-east-1` 将同一 Java 业务部署为 ARM64 容器；AgentCore Runtime 与 DEFAULT Endpoint 均为 READY，两个真实会话均返回订单 `ORD-1001`、状态 `SHIPPED`、总价 `73.5 USD`。Java 应用在每个会话执行了 `order_lookup` 与 `calculator`，ADOT 向 CloudWatch 导出的每会话 6 个业务 span 与调用会话一致。AgentCore Online Evaluations 的本次评分仍待最终核验；以下原有 2026-09 实验结果不代表此次 Runtime 评分。
+
+开发者从 [Trace 封装与环境变量说明](docs/telemetry-configuration.md)了解 `AgentTelemetry`、OTel API 与外置 ADOT 的关系。
+
+操作者从[Runtime 部署指南](docs/deployment-guide-runtime.md)获取构建、部署及复现步骤，从[Runtime 演示流程](docs/demo-flow-runtime.md)调用现有部署并检查会话。新增版本仅提供 CLI/SDK 入口，没有 WebUI；操作者可使用本仓库的当前源码或交付源码包。审查人员确认官方 ADOT 2.31.0 仍有 4 项 HIGH 依赖公告，详见部署指南引用的本地安全报告。
+
 这个示例让 Java 应用执行真实 Bedrock 工具调用，通过 ADOT Java Agent 直接把 GenAI spans 发送到 AWS，再由 AgentCore Online Evaluations 自动评分。Java 应用和所有运维脚本均包含中文注释。
 
 **完整客户说明与验证报告：**[AgentCore-Evaluation-Java接入与评分说明](docs/AgentCore-Evaluation-Java接入与评分说明.md)。本文集中说明 Java 接入、评分量表、EMF、Dashboard、实测结果与复现步骤。
 
-最终仓库脚本实测：两个 Java 会话自动产生 10 条 Online 数值评分、0 条评估错误；CloudWatch 汇总与原始评分一致。实验执行者保留了 AWS 资源和全部成功／失败记录。
+2026-09 EC2 历史实验：两个 Java 会话自动产生 10 条 Online 数值评分、0 条评估错误；CloudWatch 汇总与原始评分一致。实验执行者保留了 AWS 资源和全部成功／失败记录。
 
 Java 应用负责调用顺序、工具执行和业务埋点；Bedrock 模型负责选择工具和生成回答；ADOT Java 负责使用默认 AWS 凭证链签名并导出；AgentCore Evaluations 负责读取会话、调用 judge 和写出评分；CloudWatch 负责存储与同指标统计。
 

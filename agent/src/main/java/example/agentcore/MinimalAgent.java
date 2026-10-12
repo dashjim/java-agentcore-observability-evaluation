@@ -1,15 +1,6 @@
 package example.agentcore;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.baggage.Baggage;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.Scope;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,32 +13,39 @@ import software.amazon.awssdk.services.bedrockruntime.model.*;
 /**
  * 最小订单 Agent：Java 应用编排对话、执行本地工具并校验流程；真实 Bedrock 模型选择工具及参数、生成最终回答。
  *
- * <p>Java 应用通过 OpenTelemetry API 写入 span；启动时挂载的 ADOT Java agent 提供共享
- * provider、SDK、导出器和 SigV4 签名。应用不另建 SDK，也不自行发送遥测数据。
- * AgentCore Evaluations（Eval）随后按 scope、操作类型和内容字段读取导出的遥测，并由 evaluator 评判质量。
+ * <p>Java 业务代码通过 AgentTelemetry 的 agent/chat/tool 三个入口记录遥测。
+ * AgentTelemetry 使用标准 OpenTelemetry API；外置 ADOT Java agent 负责共享 provider 和导出。
  */
 public final class MinimalAgent {
-    // Eval 的通用 OpenTelemetry 适配按此前缀识别应用埋点；Java 应用使用固定 scope 标识本示例。
-    static final String SCOPE_NAME = "opentelemetry.instrumentation.java_agentcore_demo";
     static final String DEFAULT_TASK = "查询订单 ORD-1001，用 calculator 计算单价乘数量，回答订单状态与商品总价（USD）。";
     // Java 应用向模型声明工具使用要求；Bedrock 模型仍负责每一轮决策，Java 不预先伪造工具调用。
     static final String SYSTEM_PROMPT = "You are a concise order assistant. The application provides two real local tools. "
         + "Always call order_lookup before answering an order question. Always call calculator for arithmetic, using "
         + "the values returned by order_lookup. Never invent tool results. Answer in Chinese, cite the order ID, "
         + "status and total with currency. Explain that this is demo fixture data. Do not include tax or shipping.";
-    // Java 应用从 ADOT 注册的全局 provider 获取 tracer，确保手工 span 与自动埋点共享上下文。
-    private final Tracer tracer = GlobalOpenTelemetry.getTracer(SCOPE_NAME, "1.0.0");
-    // Java 应用从环境变量读取运行参数；sessionId 关联同一次会话的根 span、模型 span 和工具 span。
-    private final String sessionId = env("SESSION_ID", "java-eval-" + UUID.randomUUID());
+    // Java 应用从环境变量读取运行参数；构造器把会话标识交给遥测适配器关联根、模型和工具 span。
     private final String modelId = env("BEDROCK_MODEL_ID", "amazon.nova-lite-v1:0");
     private final String region = env("AWS_REGION", env("AWS_DEFAULT_REGION", "us-east-1"));
     private final String agentName = env("OTEL_SERVICE_NAME", "java-agentcore-demo");
-    // 此开关仅控制本类手工写入的内容字段；ADOT 自动埋点的内容采集由启动配置单独控制。
-    private final boolean capture = Boolean.parseBoolean(env("CAPTURE_CONTENT", "true"));
+    // Java 应用仅持有业务化遥测入口；AgentTelemetry 读取调用方传入的内容采集策略。
+    private final AgentTelemetry telemetry;
     private final int maxCalls = Integer.parseInt(env("MAX_MODEL_CALLS", "5"));
     // Java 应用记录已成功执行的工具和模型请求次数，用于流程验收；这些计数不代表 Eval 评分。
     private final List<String> successfulTools = new ArrayList<>();
     private int modelCalls;
+    private boolean started;
+
+    /** Java CLI 从环境变量选择会话；Runtime HTTP 入口使用显式会话构造器。 */
+    public MinimalAgent() {
+        this(env("SESSION_ID", "java-eval-" + UUID.randomUUID()));
+    }
+
+    /** Java HTTP 服务为每次请求创建独立 Agent，将 Runtime 转发的会话标识传给所有业务 span。 */
+    public MinimalAgent(String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) throw new IllegalArgumentException("Session ID is required");
+        this.telemetry = new AgentTelemetry(sessionId, modelId, region, agentName,
+            Boolean.parseBoolean(env("CAPTURE_CONTENT", "true")));
+    }
 
     /**
      * Java 入口输出工具 schema，或启动一次真实 Bedrock 对话；失败时输出结构化错误并以非零状态退出。
@@ -68,72 +66,31 @@ public final class MinimalAgent {
     }
 
     /**
-     * Java 应用创建带会话信息的 span，ADOT provider 继承当前父上下文并负责后续导出。
-     * Eval 按 {@code gen_ai.operation.name} 区分 invoke_agent、chat 与 execute_tool。
-     *
-     * @param operation Eval 识别的操作类型
-     * @param suffix Java 应用附加到 span 名称的 Agent、模型或工具名称
-     * @param kind OpenTelemetry 的 span 类型，与 Eval 的操作类型字段分开设置
-     * @return 已开始的 span，调用方负责设置当前 scope 并结束 span
-     */
-    private Span span(String operation, String suffix, SpanKind kind) {
-        return tracer.spanBuilder(operation + " " + suffix).setSpanKind(kind)
-            .setAttribute("gen_ai.operation.name", operation)
-            .setAttribute("session.id", sessionId).setAttribute("gen_ai.conversation.id", sessionId)
-            .setAttribute("gen_ai.agent.name", agentName).setAttribute("gen_ai.provider.name", "aws.bedrock")
-            .setAttribute("gen_ai.system", "aws.bedrock").startSpan();
-    }
-
-    /**
-     * Java 应用管理根 span、凭证及 Bedrock 客户端的生命周期，并检查模型是否使用了两个必要工具。
+     * Java 应用管理凭证及 Bedrock 客户端的生命周期，并检查模型是否使用了两个必要工具。
+     * AgentTelemetry 负责根 span、会话上下文及结构化日志，不参与业务正确性判断。
      *
      * @param task Java 应用交给 Bedrock 模型处理的用户任务
+     * @return Java 应用的结构化执行结果；回答始终返回给调用者，内容采集开关仅控制日志和 span
      * @throws IllegalStateException ADOT 未记录 span，或模型结束时没有成功使用全部必要工具
      */
-    private void run(String task) {
+    public Map<String, Object> run(String task) {
+        // Java 应用禁止重复使用同一业务实例；RuntimeServer 每次请求重新创建实例，隔离计数与工具状态。
+        if (started) throw new IllegalStateException("Agent instances support a single invocation");
+        started = true;
         if (maxCalls < 1 || maxCalls > 10) throw new IllegalArgumentException("MAX_MODEL_CALLS must be 1..10");
-        // Java 应用在当前作用域放入会话 baggage；ADOT 自动埋点可沿同一上下文关联底层调用。
-        try (Scope baggage = Baggage.current().toBuilder().put("session.id", sessionId).build().makeCurrent()) {
-            Span root = span("invoke_agent", agentName, SpanKind.INTERNAL);
-            try (Scope current = root.makeCurrent()) {
-                // Java 应用在创建 AWS 客户端前拒绝无效/未采样的 provider，避免运行后缺少可评估的 trace。
-                if (!root.isRecording() || !root.getSpanContext().isValid())
-                    throw new IllegalStateException("No recording ADOT provider: launch with -javaagent and always_on sampling");
-                if (capture) {
-                    // Eval 从根 span 的 task.input/task.output 读取任务和回答；此处不包裹自定义消息信封。
-                    root.setAttribute("gen_ai.task.input", task);
-                    root.setAttribute("gen_ai.tool.definitions", Tools.json(Tools.DEFINITIONS));
-                }
-                System.out.println(Tools.json(Map.of("event", "agent_start", "timestamp", Instant.now().toString(),
-                    "session_id", sessionId, "trace_id", root.getSpanContext().getTraceId(),
-                    "root_span_id", root.getSpanContext().getSpanId(), "scope_name", SCOPE_NAME,
-                    "model_id", modelId, "region", region, "capture_content", capture)));
-                // 默认凭证链为 AWS SDK 提供凭证，SDK 为真实 Converse 请求签名；Java 应用管理超时与资源关闭。
-                try (var credentials = DefaultCredentialsProvider.builder().build();
-                     var client = BedrockRuntimeClient.builder().region(Region.of(region)).credentialsProvider(credentials)
-                         .overrideConfiguration(c -> c.apiCallTimeout(Duration.ofSeconds(90))
-                             .apiCallAttemptTimeout(Duration.ofSeconds(60))).build()) {
-                    String answer = converseLoop(client, task);
-                    if (capture) root.setAttribute("gen_ai.task.output", answer);
-                    root.setAttribute("demo.model_calls", modelCalls);
-                    root.setAttribute("demo.successful_tool_calls", successfulTools.size());
-                    // Java 仅校验两类工具都成功执行过；调用顺序、参数来源和回答质量仍需 Eval 或人工评判。
-                    boolean usedBoth = successfulTools.containsAll(List.of("order_lookup", "calculator"));
-                    root.setAttribute("demo.required_tools_observed", usedBoth);
-                    if (!usedBoth) throw new IllegalStateException("Model completed without both successful required tools");
-                    root.setStatus(StatusCode.OK);
-                    var result = new java.util.LinkedHashMap<String, Object>();
-                    result.put("event", "agent_complete"); result.put("timestamp", Instant.now().toString());
-                    result.put("session_id", sessionId); result.put("trace_id", root.getSpanContext().getTraceId());
-                    result.put("root_span_id", root.getSpanContext().getSpanId()); result.put("model_id", modelId);
-                    result.put("model_calls", modelCalls); result.put("successful_tools", successfulTools);
-                    result.put("capture_content", capture);
-                    if (capture) result.put("answer", answer);
-                    System.out.println(Tools.json(result));
-                }
-            } catch (RuntimeException e) { failed(root, e); throw e; }
-            finally { root.end(); } // Java 应用结束 span；ADOT provider 负责批量导出及进程退出时的刷出。
-        }
+        return telemetry.agent(task, run -> {
+            // 默认凭证链为 AWS SDK 提供凭证，SDK 为真实 Converse 请求签名；Java 应用管理超时与资源关闭。
+            try (var credentials = DefaultCredentialsProvider.builder().build();
+                 var client = BedrockRuntimeClient.builder().region(Region.of(region)).credentialsProvider(credentials)
+                     .overrideConfiguration(c -> c.apiCallTimeout(Duration.ofSeconds(90))
+                         .apiCallAttemptTimeout(Duration.ofSeconds(60))).build()) {
+                String answer = converseLoop(client, task);
+                // Java 仅校验两类工具都成功执行过；调用顺序、参数来源和回答质量仍需 Eval 或人工评判。
+                boolean usedBoth = successfulTools.containsAll(List.of("order_lookup", "calculator"));
+                run.outcome(answer, modelCalls, successfulTools, usedBoth);
+                if (!usedBoth) throw new IllegalStateException("Model completed without both successful required tools");
+            }
+        });
     }
 
     /**
@@ -171,43 +128,21 @@ public final class MinimalAgent {
     }
 
     /**
-     * Java 应用调用一次真实 Converse API，并将请求、响应和用量写入 chat span，供 ADOT 导出及 Eval 读取。
+     * Java 应用调用一次真实 Converse API；AgentTelemetry 将请求、响应和用量交给 ADOT 导出，供 Eval 读取。
      *
      * @param client 执行网络请求的 Bedrock Runtime 客户端
      * @param history Java 应用累积的用户消息、模型消息和工具结果
      * @return Bedrock 模型响应，包含工具调用或最终回答及停止原因
      */
     private ConverseResponse inference(BedrockRuntimeClient client, List<Message> history) {
-        Span chat = span("chat", modelId, SpanKind.CLIENT);
-        try (Scope current = chat.makeCurrent()) {
+        // Java 应用提供工具 schema 和历史；Bedrock 模型决定是否调用工具以及最终回答的内容。
+        var request = ConverseRequest.builder().modelId(modelId)
+            .system(SystemContentBlock.fromText(SYSTEM_PROMPT)).messages(history).toolConfig(Tools.configuration())
+            .inferenceConfig(InferenceConfiguration.builder().maxTokens(700).temperature(0.0f).build()).build();
+        return telemetry.chat(request, () -> {
             modelCalls++;
-            chat.setAttribute("gen_ai.request.model", modelId);
-            chat.setAttribute("gen_ai.request.max_tokens", 700L);
-            chat.setAttribute("gen_ai.request.temperature", 0.0);
-            chat.setAttribute("server.address", "bedrock-runtime." + region + ".amazonaws.com");
-            chat.setAttribute("aws.region", region);
-            if (capture) {
-                // Eval 按标准字段读取推理消息及系统指令；Java 应用将标准结构序列化为 span 属性字符串。
-                chat.setAttribute("gen_ai.input.messages", Tools.json(messages(history)));
-                chat.setAttribute("gen_ai.system_instructions", Tools.json(List.of(Map.of("type", "text", "content", SYSTEM_PROMPT))));
-                chat.setAttribute("gen_ai.tool.definitions", Tools.json(Tools.DEFINITIONS));
-            }
-            // Java 应用提供工具 schema 和历史；Bedrock 模型决定是否调用工具以及最终回答的内容。
-            ConverseResponse response = client.converse(ConverseRequest.builder().modelId(modelId)
-                .system(SystemContentBlock.fromText(SYSTEM_PROMPT)).messages(history).toolConfig(Tools.configuration())
-                .inferenceConfig(InferenceConfiguration.builder().maxTokens(700).temperature(0.0f).build()).build());
-            chat.setAttribute("gen_ai.response.model", modelId); // Converse 未返回解析后的模型版本，Java 应用沿用请求中的模型 ID。
-            chat.setAttribute("aws.request_id", response.responseMetadata().requestId());
-            chat.setAttribute(AttributeKey.stringArrayKey("gen_ai.response.finish_reasons"), List.of(response.stopReasonAsString()));
-            if (response.usage() != null) {
-                chat.setAttribute("gen_ai.usage.input_tokens", response.usage().inputTokens().longValue());
-                chat.setAttribute("gen_ai.usage.output_tokens", response.usage().outputTokens().longValue());
-            }
-            if (capture) chat.setAttribute("gen_ai.output.messages", Tools.json(messages(List.of(response.output().message()))));
-            chat.setStatus(StatusCode.OK);
-            return response;
-        } catch (RuntimeException e) { failed(chat, e); throw e; }
-        finally { chat.end(); }
+            return client.converse(request);
+        });
     }
 
     /**
@@ -217,81 +152,16 @@ public final class MinimalAgent {
      * @return Java 应用生成的工具结果内容块，保留模型给出的调用 ID
      */
     private ContentBlock execute(ToolUseBlock call) {
-        Span tool = span("execute_tool", call.name(), SpanKind.INTERNAL);
-        try (Scope current = tool.makeCurrent()) {
-            // Eval 从 name、call.arguments、call.result 读取工具信息；Java 应用保留 call.id 关联请求与结果。
-            tool.setAttribute("gen_ai.tool.name", call.name());
-            tool.setAttribute("gen_ai.tool.type", "function");
-            tool.setAttribute("gen_ai.tool.call.id", call.toolUseId());
-            Object args = Tools.value(call.input());
-            if (capture) tool.setAttribute("gen_ai.tool.call.arguments", Tools.json(args));
-            Map<String, Object> output;
-            ToolResultStatus status;
+        return telemetry.tool(call, args -> {
             try {
-                output = Tools.execute(call.name(), Tools.JSON.valueToTree(args));
-                status = ToolResultStatus.SUCCESS;
+                var output = Tools.execute(call.name(), Tools.JSON.valueToTree(args));
                 successfulTools.add(call.name());
-                tool.setStatus(StatusCode.OK);
+                return AgentTelemetry.ToolOutcome.success(output);
             } catch (IllegalArgumentException | ArithmeticException e) {
                 // Java 应用把参数/算术错误反馈给模型，让模型在剩余调用预算内决定是否修正并重试。
-                output = Map.of("error", String.valueOf(e.getMessage()));
-                status = ToolResultStatus.ERROR;
-                failed(tool, e);
+                return AgentTelemetry.ToolOutcome.failure(Map.of("error", String.valueOf(e.getMessage())), e);
             }
-            if (capture) tool.setAttribute("gen_ai.tool.call.result", Tools.json(output));
-            var event = new java.util.LinkedHashMap<String, Object>();
-            event.put("event", "tool_executed"); event.put("session_id", sessionId);
-            event.put("tool_name", call.name()); event.put("tool_call_id", call.toolUseId());
-            event.put("status", status.toString());
-            if (capture) { event.put("arguments", args); event.put("result", output); }
-            System.out.println(Tools.json(event));
-            return ContentBlock.fromToolResult(ToolResultBlock.builder().toolUseId(call.toolUseId()).status(status)
-                .content(ToolResultContentBlock.fromJson(Tools.document(output))).build());
-        } catch (RuntimeException e) { failed(tool, e); throw e; }
-        finally { tool.end(); }
-    }
-
-    /**
-     * Java 应用把 Bedrock 消息转换成供遥测使用的 GenAI role/parts 结构，不修改发送给模型的历史。
-     * Bedrock 的 USER 消息承载工具结果，GenAI 遥测则以 tool 角色表示结果，便于下游关联工具调用。
-     *
-     * @param history Java 应用需要记录的 Bedrock 消息
-     * @return 含文本、tool_call 或 tool_call_response 的标准消息列表，供 Eval 读取推理消息属性
-     */
-    static List<Map<String, Object>> messages(List<Message> history) {
-        List<Map<String, Object>> output = new ArrayList<>();
-        for (Message m : history) {
-            List<Map<String, Object>> ordinary = new ArrayList<>();
-            List<Map<String, Object>> results = new ArrayList<>();
-            for (ContentBlock b : m.content()) {
-                if (b.text() != null) ordinary.add(Map.of("type", "text", "content", b.text()));
-                else if (b.toolUse() != null) {
-                    var t = b.toolUse();
-                    ordinary.add(Map.of("type", "tool_call", "id", t.toolUseId(), "name", t.name(), "arguments", Tools.value(t.input())));
-                } else if (b.toolResult() != null) {
-                    var t = b.toolResult();
-                    List<Object> values = t.content().stream().map(c -> c.json() != null ? Tools.value(c.json()) : c.text()).toList();
-                    results.add(Map.of("type", "tool_call_response", "id", t.toolUseId(),
-                        "response", values.size() == 1 ? values.getFirst() : values));
-                } else throw new IllegalArgumentException("This minimal agent only supports text and tool content blocks");
-            }
-            // 同一 Bedrock 消息可能混合文本和结果；Java 转换器按 GenAI 角色拆分，并保持工具调用 ID。
-            if (!ordinary.isEmpty()) output.add(Map.of("role", m.roleAsString(), "parts", ordinary));
-            if (!results.isEmpty()) output.add(Map.of("role", "tool", "parts", results));
-        }
-        return output;
-    }
-
-    /**
-     * Java 应用标记失败 span；关闭内容采集时，本方法只写入错误类型，不记录异常详情或堆栈。
-     *
-     * @param span Java 应用需要标记的根、模型或工具 span
-     * @param error 当前操作捕获的运行时异常
-     */
-    private void failed(Span span, RuntimeException error) {
-        span.setStatus(StatusCode.ERROR, capture ? String.valueOf(error.getMessage()) : error.getClass().getSimpleName());
-        span.setAttribute("error.type", error.getClass().getName());
-        if (capture) span.recordException(error);
+        });
     }
 
     /**

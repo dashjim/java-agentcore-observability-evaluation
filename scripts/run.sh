@@ -21,12 +21,12 @@ usage() {
   --schema                构建后输出应用工具 schema，不加载 ADOT 或调用模型
   --state PATH            从 setup state 读取 Region、service 和来源日志组
   --work-dir PATH         工作目录；环境变量 WORK_DIR，默认项目 .local
-  --download-adot         缺失时下载固定 ADOT v2.30.0，并检查证据中的 SHA-256
+  --download-adot         缺失时下载固定 ADOT v2.31.0，并检查 GitHub release 的 SHA-256
 
 环境变量：JAVA_BUILD_DIR（默认 WORK_DIR/build）、MAVEN_HOME、MAVEN_OFFLINE=true、
 ADOT_JAVA_AGENT_JAR、LOG_DIR（默认 WORK_DIR/logs）、STATE_PATH、AWS_REGION、
 OTEL_SERVICE_NAME、LOG_GROUP、OTEL_RESOURCE_ATTRIBUTES、OTEL_EXPORTER_OTLP_TRACES_ENDPOINT。
-操作者自行提供 ADOT JAR 时仍须匹配 v2.30.0 的固定 SHA。Maven 优先复用现有安装与缓存。
+操作者自行提供 ADOT JAR 时仍须匹配 v2.31.0 的固定 SHA。Maven 优先复用现有安装与缓存。
 本入口从不调用 setup 或 cleanup；每次运行使用新日志文件并保留资源、state 和结果。
 HELP
 }
@@ -176,7 +176,7 @@ if not headers.get('x-aws-log-stream'):
     raise SystemExit('ADOT 定向头必须包含 x-aws-log-stream')
 PY
 export OTEL_TRACES_SAMPLER=always_on OTEL_AWS_APPLICATION_SIGNALS_ENABLED=false
-# 这两个跨语言提示与 Java 2.30.0 一同实测；没有独立证明 Java 会读取它们。
+# 应用保留这两个跨语言提示；没有独立证明 ADOT Java 会读取它们，手工内容属性仍由应用控制。
 export AGENT_OBSERVABILITY_ENABLED="${AGENT_OBSERVABILITY_ENABLED:-true}"
 export AWS_GENAI_CONTENT_EXTRACTION_OPT_OUT="${AWS_GENAI_CONTENT_EXTRACTION_OPT_OUT:-true}"
 export OTEL_BSP_SCHEDULE_DELAY="${OTEL_BSP_SCHEDULE_DELAY:-1000}"
@@ -184,20 +184,20 @@ export OTEL_BSP_EXPORT_TIMEOUT="${OTEL_BSP_EXPORT_TIMEOUT:-30000}"
 export OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT="${OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT:-131072}"
 export CAPTURE_CONTENT="${CAPTURE_CONTENT:-true}"
 
-# 固定摘要来自旧实测 evidence/runtime-versions.json；禁止使用 latest 或接受任意摘要。
+# 审查人员核对 ADOT v2.31.0 的 GitHub release asset 摘要；运维脚本拒绝 latest 或任意摘要。
 if [[ ! -f "$ADOT_JAVA_AGENT_JAR" ]]; then
   if [[ "$download_adot" != true ]]; then
-    echo "ADOT JAR 缺失：$ADOT_JAVA_AGENT_JAR；请自行下载 v2.30.0 或显式添加 --download-adot" >&2
+    echo "ADOT JAR 缺失：$ADOT_JAVA_AGENT_JAR；请自行下载 v2.31.0 或显式添加 --download-adot" >&2
     exit 2
   fi
   mkdir -p "$(dirname -- "$ADOT_JAVA_AGENT_JAR")"
   curl --fail --location --silent --show-error --retry 2 --connect-timeout 15 --max-time 300 \
-    'https://github.com/aws-observability/aws-otel-java-instrumentation/releases/download/v2.30.0/aws-opentelemetry-agent.jar' \
+    'https://github.com/aws-observability/aws-otel-java-instrumentation/releases/download/v2.31.0/aws-opentelemetry-agent.jar' \
     -o "$ADOT_JAVA_AGENT_JAR.partial"
-  verify_sha "$ADOT_JAVA_AGENT_JAR.partial" '3eaf21615c658e567f40428fd582aa67ba112b416f9f856407a22264f27cd5db' sha256
+  verify_sha "$ADOT_JAVA_AGENT_JAR.partial" '4e0f171c6d935f0b9ae5f66b28b0b2dae5e2ac1261fc3e3ffc396ef1e500f4fc' sha256
   mv -- "$ADOT_JAVA_AGENT_JAR.partial" "$ADOT_JAVA_AGENT_JAR"
 fi
-verify_sha "$ADOT_JAVA_AGENT_JAR" '3eaf21615c658e567f40428fd582aa67ba112b416f9f856407a22264f27cd5db' sha256
+verify_sha "$ADOT_JAVA_AGENT_JAR" '4e0f171c6d935f0b9ae5f66b28b0b2dae5e2ac1261fc3e3ffc396ef1e500f4fc' sha256
 build
 # 应用日志含演示对话；操作者应保留在工作目录而非提交 Git。每次运行使用唯一文件。
 run_id="$(python3 -c 'import uuid; print(uuid.uuid4().hex)')"

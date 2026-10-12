@@ -31,7 +31,7 @@ class AgentContractTest {
         var result = ToolResultBlock.builder().toolUseId("call-17").status(ToolResultStatus.SUCCESS)
             .content(ToolResultContentBlock.fromJson(Tools.document(Map.of("result", 73.5)))).build();
         // Java 转换器只修改遥测表示；实际 Converse 消息仍按 Bedrock 协议使用 ASSISTANT / USER 角色。
-        var messages = Tools.JSON.valueToTree(MinimalAgent.messages(List.of(
+        var messages = Tools.JSON.valueToTree(AgentTelemetry.messages(List.of(
             Message.builder().role(ConversationRole.ASSISTANT).content(ContentBlock.fromToolUse(call)).build(),
             Message.builder().role(ConversationRole.USER).content(ContentBlock.fromToolResult(result)).build())));
         // JUnit 检查 Eval 推理消息字段所使用的 GenAI 结构，防止请求与结果失去关联或丢失工具输出。
